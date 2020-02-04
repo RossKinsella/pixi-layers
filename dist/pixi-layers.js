@@ -227,9 +227,9 @@ var pixi_display;
             this._tempRenderTarget = null;
             this._tempRenderTargetSource = new PIXI.Rectangle();
         }
-        LayerTextureCache.prototype.initRenderTexture = function (renderer) {
-            var width = renderer ? renderer.screen.width : 100;
-            var height = renderer ? renderer.screen.height : 100;
+        LayerTextureCache.prototype.initRenderTexture = function (renderer, forcedWidth, forcedHeight) {
+            var width = forcedWidth ? forcedWidth : renderer ? renderer.screen.width : 100;
+            var height = forcedHeight ? forcedHeight : renderer ? renderer.screen.height : 100;
             var resolution = renderer ? renderer.resolution : PIXI.settings.RESOLUTION;
             this.renderTexture = PIXI.RenderTexture.create({ width: width, height: height, resolution: resolution });
             if (this.layer.group.useDoubleBuffer) {
@@ -239,9 +239,9 @@ var pixi_display;
                 ];
             }
         };
-        LayerTextureCache.prototype.getRenderTexture = function () {
+        LayerTextureCache.prototype.getRenderTexture = function (width, height) {
             if (!this.renderTexture) {
-                this.initRenderTexture();
+                this.initRenderTexture(undefined, width, height);
             }
             return this.renderTexture;
         };
@@ -253,18 +253,6 @@ var pixi_display;
             var rt = this.renderTexture;
             var group = this.layer.group;
             var db = this.doubleBuffer;
-            if (rt.width !== screen.width ||
-                rt.height !== screen.height ||
-                rt.baseTexture.resolution !== renderer.resolution) {
-                rt.baseTexture.resolution = renderer.resolution;
-                rt.resize(screen.width, screen.height);
-                if (db) {
-                    db[0].baseTexture.resolution = renderer.resolution;
-                    db[0].resize(screen.width, screen.height);
-                    db[1].baseTexture.resolution = renderer.resolution;
-                    db[1].resize(screen.width, screen.height);
-                }
-            }
             this._tempRenderTarget = renderer.renderTexture.current;
             this._tempRenderTargetSource.copyFrom(renderer.renderTexture.sourceFrame);
             renderer.batch.flush();
@@ -427,11 +415,11 @@ var pixi_display;
             enumerable: true,
             configurable: true
         });
-        Layer.prototype.getRenderTexture = function () {
+        Layer.prototype.getRenderTexture = function (width, height) {
             if (!this.textureCache) {
                 this.textureCache = new LayerTextureCache(this);
             }
-            return this.textureCache.getRenderTexture();
+            return this.textureCache.getRenderTexture(width, height);
         };
         Layer.prototype.updateDisplayLayers = function () {
         };

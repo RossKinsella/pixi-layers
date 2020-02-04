@@ -13,11 +13,10 @@ namespace pixi_display {
         _tempRenderTarget: PIXI.RenderTexture = null;
         _tempRenderTargetSource = new PIXI.Rectangle();
 
-        initRenderTexture(renderer?: PIXI.Renderer) {
-            const width = renderer ? renderer.screen.width : 100;
-            const height = renderer ? renderer.screen.height : 100;
+        initRenderTexture(renderer?: PIXI.Renderer, forcedWidth?: number, forcedHeight?: number) {
+            const width = forcedWidth ? forcedWidth : renderer ? renderer.screen.width : 100;
+            const height = forcedHeight ? forcedHeight : renderer ? renderer.screen.height : 100;
             const resolution = renderer ? renderer.resolution : PIXI.settings.RESOLUTION;
-
             this.renderTexture = PIXI.RenderTexture.create({width, height, resolution});
 
             if (this.layer.group.useDoubleBuffer) {
@@ -28,9 +27,9 @@ namespace pixi_display {
             }
         }
 
-        getRenderTexture() {
+        getRenderTexture(width?: number, height?: number) {
             if (!this.renderTexture) {
-                this.initRenderTexture();
+                this.initRenderTexture(undefined, width, height);
             }
             return this.renderTexture;
         }
@@ -45,20 +44,6 @@ namespace pixi_display {
             const rt = this.renderTexture;
             const group = this.layer.group;
             const db = this.doubleBuffer;
-
-            if (rt.width !== screen.width ||
-                rt.height !== screen.height ||
-                rt.baseTexture.resolution !== renderer.resolution) {
-                rt.baseTexture.resolution = renderer.resolution;
-                rt.resize(screen.width, screen.height);
-
-                if (db) {
-                    db[0].baseTexture.resolution = renderer.resolution;
-                    db[0].resize(screen.width, screen.height);
-                    db[1].baseTexture.resolution = renderer.resolution;
-                    db[1].resize(screen.width, screen.height);
-                }
-            }
 
             this._tempRenderTarget = renderer.renderTexture.current;
             this._tempRenderTargetSource.copyFrom(renderer.renderTexture.sourceFrame);
@@ -230,11 +215,11 @@ namespace pixi_display {
             this.group.sortPriority = value;
         }
 
-        getRenderTexture() {
+        getRenderTexture(width?: number, height?: number) {
             if (!this.textureCache) {
                 this.textureCache = new LayerTextureCache(this);
             }
-            return this.textureCache.getRenderTexture();
+            return this.textureCache.getRenderTexture(width, height);
         }
 
         updateDisplayLayers() {
